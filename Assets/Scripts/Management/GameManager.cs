@@ -29,8 +29,13 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         GenerateDefaultDeck();
+        Utilities.Shuffle(Deck);
     }
 
+    public void TakeTurn()
+    {
+        currPlayer += playerIncrement;
+    }
 
     public void GenerateDefaultDeck()
     {

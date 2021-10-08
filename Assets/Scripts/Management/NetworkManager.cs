@@ -4,6 +4,8 @@ using UnityEngine;
 using Photon.Realtime;
 using Photon.Pun;
 using TMPro;
+using ExitGames.Client.Photon;
+using simulation;
 
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
@@ -26,6 +28,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         DontDestroyOnLoad(this);
         PhotonNetwork.ConnectUsingSettings();
+
+        PhotonPeer.RegisterType(typeof(simulation.Card), (byte)'Z', Utilities.SerializeCard, Utilities.DeserializeCard);
     }
 
     #region CALLBACKS
@@ -38,7 +42,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.CountOfRooms == 0)
         {
-            PhotonNetwork.CreateRoom("DEBUG_ROOM");
+            PhotonNetwork.CreateRoom("MAINROOM");
         }
         else
         {
@@ -51,9 +55,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         Debug.Log("Joined Room");
         PhotonNetwork.NickName = "Player " + PhotonNetwork.CurrentRoom.PlayerCount;
         photonView.RPC("OnRoomUpdate", RpcTarget.All);
+
+        for(int i = 0; i < 10; i++)
+        {
+            Debug.Log("Sending " + GameManager.Instance.Deck[i]);
+            photonView.RPC("TestSerializer", RpcTarget.All, GameManager.Instance.Deck[i]);
+        }
     }
 
-    public override void OnPlayerLeftRoom(Player otherPlayer)
+    public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
     {
         OnRoomUpdate();
     }
@@ -74,7 +84,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    public void CardPlayed(Photon.Realtime.Player player, simulation.Card playedCard)
+    public void TestSerializer(Card card)
+    {
+        Debug.Log("Received: " + card);
+    }
+
+    [PunRPC]
+    public void CardPlayed(Photon.Realtime.Player player, Card playedCard)
     {
         /* First find the player being referenced */
         simulation.Player activePlayer = GameManager.Instance.Players.Find((simulation.Player p) => p.player == player);

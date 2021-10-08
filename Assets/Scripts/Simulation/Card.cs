@@ -28,6 +28,15 @@ namespace simulation
             return this.value == other.value && this.color == other.color && this.type == other.type;
         }
 
+        public override int GetHashCode()
+        {
+            int hashCode = -1527161137;
+            hashCode = hashCode * -1521134295 + value.GetHashCode();
+            hashCode = hashCode * -1521134295 + 2 * color.GetHashCode();
+            hashCode = hashCode * -1521134295 + 4 * type.GetHashCode();
+            return hashCode;
+        }
+
         public override string ToString()
         {
             return "{ " + color + ((type == CardType.NUMBER) ? " " + value + "}" : " " + type + "}");
