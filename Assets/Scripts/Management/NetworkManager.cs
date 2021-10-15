@@ -55,12 +55,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         Debug.Log("Joined Room");
         PhotonNetwork.NickName = "Player " + PhotonNetwork.CurrentRoom.PlayerCount;
         photonView.RPC("OnRoomUpdate", RpcTarget.All);
-
-        for(int i = 0; i < 10; i++)
-        {
-            Debug.Log("Sending " + GameManager.Instance.Deck[i]);
-            photonView.RPC("TestSerializer", RpcTarget.All, GameManager.Instance.Deck[i]);
-        }
     }
 
     public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
@@ -81,12 +75,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         {
             roomText.text += " - " + player.NickName + "\n";
         }
-    }
-
-    [PunRPC]
-    public void TestSerializer(Card card)
-    {
-        Debug.Log("Received: " + card);
     }
 
     [PunRPC]

@@ -25,13 +25,20 @@ namespace simulation
             if (obj.GetType() != typeof(Card)) return false;
 
             Card other = (Card)obj;
-            return this.value == other.value && this.color == other.color && this.type == other.type;
+            if(this.type == CardType.NUMBER)
+            {
+                return this.value == other.value && this.color == other.color && this.type == other.type;
+            }
+            else
+            {
+                return this.color == other.color && this.type == other.type;
+            }
         }
 
         public override int GetHashCode()
         {
             int hashCode = -1527161137;
-            hashCode = hashCode * -1521134295 + value.GetHashCode();
+            if(this.type == CardType.NUMBER) hashCode = hashCode * -1521134295 + value.GetHashCode();
             hashCode = hashCode * -1521134295 + 2 * color.GetHashCode();
             hashCode = hashCode * -1521134295 + 4 * type.GetHashCode();
             return hashCode;
@@ -46,9 +53,9 @@ namespace simulation
     public enum CardColor
     {
         RED,
+        YELLOW,
         GREEN,
         BLUE,
-        YELLOW,
         WILD
     }
 
@@ -58,8 +65,8 @@ namespace simulation
         SKIP,
         REVERSE,
         DRAW_2,
-        DRAW_4,
-        WILD
+        WILD,
+        DRAW_4
     }
 }
 

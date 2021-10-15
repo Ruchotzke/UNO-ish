@@ -24,6 +24,7 @@ public class Utilities
     }
 
 
+    #region CARD SERIALIZATION
     public static readonly byte[] serialCardMemory = new byte[12]; //12 bytes = 3 ints for a card
     public static short SerializeCard(StreamBuffer outStream, object cardToSerialize)
     {
@@ -62,4 +63,5 @@ public class Utilities
 
         return card;
     }
+    #endregion
 }

@@ -26,10 +26,24 @@ public class GameManager : MonoBehaviour
     int playerIncrement = 1;                            /* The change in index when the turn is over (+1 or -1)*/
     #endregion
 
+    [SerializeField] MeshRenderer CardGraphic;
+    [SerializeField] Grid CardGrid;
+
     private void Start()
     {
         GenerateDefaultDeck();
         Utilities.Shuffle(Deck);
+
+        for (int y = 0, i = 0; y < 8; y++)
+        {
+            for (int x = 0; x < 14; x++, i++)
+            {
+                if (i >= Deck.Count) break;
+                var instance = Instantiate(CardGraphic, CardGrid.transform);
+                instance.transform.localPosition = CardGrid.CellToLocal(new Vector3Int(x, y, 0));
+                instance.material.SetTexture("_BaseMap", CardGraphics.Instance.Graphics[Deck[i]]);
+            }
+        }
     }
 
     public void TakeTurn()
