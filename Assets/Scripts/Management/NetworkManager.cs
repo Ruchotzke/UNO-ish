@@ -38,17 +38,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinLobby();
     }
 
-    public override void OnJoinedLobby()
-    {
-        if (PhotonNetwork.CountOfRooms == 0)
-        {
-            PhotonNetwork.CreateRoom("MAINROOM");
-        }
-        else
-        {
-            PhotonNetwork.JoinRandomRoom();
-        }
-    }
+    //public override void OnJoinedLobby()
+    //{
+    //    if (PhotonNetwork.CountOfRooms == 0)
+    //    {
+    //        PhotonNetwork.CreateRoom("MAINROOM");
+    //    }
+    //    else
+    //    {
+    //        PhotonNetwork.JoinRandomRoom();
+    //    }
+    //}
 
     public override void OnJoinedRoom()
     {
@@ -91,6 +91,34 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         /* Next add the card to the played pile */
         GameManager.Instance.Discard.Add(playedCard);
+    }
+
+    [PunRPC]
+    public void GameLoaded(Photon.Realtime.Player player)
+    {
+        /* Only the master client handles starting the game */
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        /* Generate a new player for this new player */
+        simulation.Player newPlayer = new simulation.Player();
+        newPlayer.player = player;
+
+        /* Generate a hand for this player */
+        for(int i = 0; i < GameManager.Instance.StartingHandSize; i++)
+        {
+            if (GameManager.Instance.Deck.Count <= 0) Debug.LogError("Ran out of cards to distribute.");
+            newPlayer.hand.Add(GameManager.Instance.Deck[0]);
+            GameManager.Instance.Deck.RemoveAt(0);
+        }
+
+        /* Add the player to the list of players */
+        GameManager.Instance.Players.Add(newPlayer);
+
+        /* If all of the players loaded into the scene, we can start the game */
+        if(GameManager.Instance.Players.Count == PhotonNetwork.CurrentRoom.PlayerCount)
+        {
+            Debug.Log("All players connected. Starting the game.");
+        }
     }
 
 

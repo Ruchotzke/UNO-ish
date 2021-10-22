@@ -1,3 +1,4 @@
+using Photon.Pun;
 using simulation;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,14 +27,44 @@ public class GameManager : MonoBehaviour
     int playerIncrement = 1;                            /* The change in index when the turn is over (+1 or -1)*/
     #endregion
 
+    #region SETTINGS
+    public int StartingHandSize = 6;
+    #endregion
+
     [SerializeField] MeshRenderer CardGraphic;
     [SerializeField] Grid CardGrid;
 
     private void Start()
     {
+        /* Our scene is loaded. */
+        /* If we are the master, set up the game. Otherwise alert the master we are loaded in */
+        if (PhotonNetwork.IsMasterClient)
+        {
+            /* Set up the game */
+            InitializeGame();
+
+            /* Generate a player for the host */
+            NetworkManager.Instance.photonView.RPC("GameLoaded", RpcTarget.All, PhotonNetwork.LocalPlayer);
+        }
+        else
+        {
+            NetworkManager.Instance.photonView.RPC("GameLoaded", RpcTarget.OthersBuffered, PhotonNetwork.LocalPlayer);
+        }
+    }
+
+    public void InitializeGame()
+    {
+        /* Generate the deck */
         GenerateDefaultDeck();
         Utilities.Shuffle(Deck);
 
+        /* Select one card to add to the discard */
+        Discard.Add(Deck[0]);
+        Deck.RemoveAt(0);
+    }
+
+    private void DEBUG_DrawCards()
+    {
         for (int y = 0, i = 0; y < 8; y++)
         {
             for (int x = 0; x < 14; x++, i++)
