@@ -85,14 +85,15 @@ public class GameManager : MonoBehaviour
         InstancedCardGraphics.Clear();
 
         /* Add in the new cards */
-        Vector2 startPos = new Vector2(-4.0f, 0.0f);
-        Vector2 endPos = new Vector2(4.0f, 0.0f);
+        Vector3 startPos = MyDeckContainer.position + new Vector3(-4.0f, 0.0f, -1.0f);
+        Vector3 endPos = MyDeckContainer.position + new Vector3(4.0f, 0.0f, 1.0f);
         float delta = 1.0f / (me.hand.Count - 1);
         for (int i = 0; i < me.hand.Count; i++) 
         {
-            Vector2 localPos = Vector2.Lerp(startPos, endPos, i * delta);
+            Vector3 localPos = Vector3.Lerp(startPos, endPos, i * delta);
             var instance = Instantiate(CardGraphic, MyDeckContainer);
-            instance.transform.localPosition = localPos;
+            instance.name = me.hand[i].ToString();
+            instance.transform.position = localPos;
             InstancedCardGraphics.Add(instance);
             instance.material.SetTexture("_BaseMap", CardGraphics.Instance.Graphics[me.hand[i]]);
         }

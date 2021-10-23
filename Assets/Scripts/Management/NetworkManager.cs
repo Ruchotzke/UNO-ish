@@ -116,7 +116,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             if (players[i] == PhotonNetwork.LocalPlayer) GameManager.Instance.me = GameManager.Instance.Players[GameManager.Instance.Players.Count - 1];
         }
 
-
         GameManager.Instance.StartGame();
     }
 
