@@ -59,6 +59,8 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        /* Display other players */
+        CanvasController.Instance.InitializePlayers(Players);
 
         /* Display my deck */
         DisplayDeck();

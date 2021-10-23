@@ -57,6 +57,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         /* Finally, update the texture of the discard pile */
         GameObject.FindObjectOfType<DiscardDragTarget>().GetComponent<RawImage>().texture = CardGraphics.Instance.Graphics[playedCard];
+
+        /* Update that player's panel */
+        CanvasController.Instance.UpdatePlayer(GameManager.Instance.Players.Find(x => x.player == player));
     }
 
     [PunRPC]
