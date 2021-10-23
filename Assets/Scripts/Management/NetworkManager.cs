@@ -105,6 +105,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void PlayersConnectedStartGame(Card[] Deck, Photon.Realtime.Player[] players, Card[] cards)
     {
         /* If we aren't the host, initialize our decks, players, etc */
+        if (PhotonNetwork.IsMasterClient)
+        {
+            GameManager.Instance.me = GameManager.Instance.Players[0];
+            GameManager.Instance.StartGame();
+            return;
+        }
+        
+        /* We aren't the host - replicate state */
         GameManager.Instance.Deck = new List<Card>();
         GameManager.Instance.Deck.AddRange(Deck);
 
