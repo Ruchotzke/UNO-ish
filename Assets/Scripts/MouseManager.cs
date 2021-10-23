@@ -46,7 +46,7 @@ public class MouseManager : MonoBehaviour
 
 
         /* Raycast the mouse position and check for an interactable element */
-        if (hitInfo.collider != null)
+        if (hitInfo.collider != null && hitInfo.collider.GetComponent<CardGraphic>() != null)
         {
             if (hitInfo.collider.transform != SelectedCard)
             {
@@ -56,6 +56,7 @@ public class MouseManager : MonoBehaviour
                 /* Generate a card copy for better viewing */
                 copy = Instantiate(hitInfo.collider.gameObject, hitInfo.collider.transform.parent);
                 Destroy(copy.GetComponent<Collider2D>());
+                Destroy(copy.GetComponent<CardGraphic>());
 
                 /* Move the new card */
                 SelectedCard = hitInfo.collider.transform;
@@ -66,8 +67,11 @@ public class MouseManager : MonoBehaviour
         else
         {
             /* Remove the old card */
-            Destroy(copy);
-            copy = null;
+            if(copy != null)
+            {
+                Destroy(copy);
+                copy = null;
+            }
         }
     }
 
@@ -93,9 +97,23 @@ public class MouseManager : MonoBehaviour
         else if(Input.GetMouseButtonUp(0) && isDragging)
         {
             /* End a drag */
-            draggedObject.position = resetPosition;
-            draggedObject.gameObject.layer = LayerMask.NameToLayer("Default");
-            isDragging = false;
+
+            /* If we landed on a valid target, complete that drag. Otherwise reset. */
+            DragTarget target = null;
+            if (hitInfo.collider != null) target = hitInfo.collider.GetComponent<DragTarget>();
+
+            if(target != null && target.OnDragInto(draggedObject.gameObject))
+            {
+                draggedObject.position = resetPosition;
+                draggedObject.gameObject.layer = LayerMask.NameToLayer("Default");
+                isDragging = false;
+            }
+            else
+            {
+                draggedObject.position = resetPosition;
+                draggedObject.gameObject.layer = LayerMask.NameToLayer("Default");
+                isDragging = false;
+            }
         }
     }
 }

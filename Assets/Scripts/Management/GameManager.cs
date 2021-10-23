@@ -92,6 +92,7 @@ public class GameManager : MonoBehaviour
         {
             Vector3 localPos = Vector3.Lerp(startPos, endPos, i * delta);
             var instance = Instantiate(CardGraphic, MyDeckContainer);
+            instance.GetComponent<CardGraphic>().card = me.hand[i];
             instance.name = me.hand[i].ToString();
             instance.transform.position = localPos;
             InstancedCardGraphics.Add(instance);
