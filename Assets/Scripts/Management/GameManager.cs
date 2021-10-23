@@ -25,14 +25,19 @@ public class GameManager : MonoBehaviour
     public List<Player> Players = new List<Player>();   /* The players in this game */
     int currPlayer = 0;                                 /* The ID of the player whose turn it is currently */
     int playerIncrement = 1;                            /* The change in index when the turn is over (+1 or -1)*/
+    public Player me;                                   /* The player representing the local player */
     #endregion
 
     #region SETTINGS
     public int StartingHandSize = 6;
     #endregion
 
-    [SerializeField] MeshRenderer CardGraphic;
-    [SerializeField] Grid CardGrid;
+    #region SERIALIZED
+    public Transform MyDeckContainer;
+    public MeshRenderer CardGraphic;
+    #endregion
+
+    private List<MeshRenderer> InstancedCardGraphics = new List<MeshRenderer>();
 
     private void Start()
     {
@@ -48,8 +53,15 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            NetworkManager.Instance.photonView.RPC("GameLoaded", RpcTarget.OthersBuffered, PhotonNetwork.LocalPlayer);
+            NetworkManager.Instance.photonView.RPC("GameLoaded", RpcTarget.MasterClient, PhotonNetwork.LocalPlayer);
         }
+    }
+
+    public void StartGame()
+    {
+
+        /* Display my deck */
+        DisplayDeck();
     }
 
     public void InitializeGame()
@@ -63,17 +75,26 @@ public class GameManager : MonoBehaviour
         Deck.RemoveAt(0);
     }
 
-    private void DEBUG_DrawCards()
+    public void DisplayDeck()
     {
-        for (int y = 0, i = 0; y < 8; y++)
+        /* First remove all existing cards */
+        foreach(var card in InstancedCardGraphics)
         {
-            for (int x = 0; x < 14; x++, i++)
-            {
-                if (i >= Deck.Count) break;
-                var instance = Instantiate(CardGraphic, CardGrid.transform);
-                instance.transform.localPosition = CardGrid.CellToLocal(new Vector3Int(x, y, 0));
-                instance.material.SetTexture("_BaseMap", CardGraphics.Instance.Graphics[Deck[i]]);
-            }
+            Destroy(card.gameObject);
+        }
+        InstancedCardGraphics.Clear();
+
+        /* Add in the new cards */
+        Vector2 startPos = new Vector2(-4.0f, 0.0f);
+        Vector2 endPos = new Vector2(4.0f, 0.0f);
+        float delta = 1.0f / (me.hand.Count - 1);
+        for (int i = 0; i < me.hand.Count; i++) 
+        {
+            Vector2 localPos = Vector2.Lerp(startPos, endPos, i * delta);
+            var instance = Instantiate(CardGraphic, MyDeckContainer);
+            instance.transform.localPosition = localPos;
+            InstancedCardGraphics.Add(instance);
+            instance.material.SetTexture("_BaseMap", CardGraphics.Instance.Graphics[me.hand[i]]);
         }
     }
 

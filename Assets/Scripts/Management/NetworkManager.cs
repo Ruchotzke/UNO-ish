@@ -21,9 +21,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     private static NetworkManager _singleton;
     #endregion
 
-    [Header("DEBUG")]
-    public TextMeshProUGUI roomText;
-
     private void Awake()
     {
         DontDestroyOnLoad(this);
@@ -38,44 +35,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinLobby();
     }
 
-    //public override void OnJoinedLobby()
-    //{
-    //    if (PhotonNetwork.CountOfRooms == 0)
-    //    {
-    //        PhotonNetwork.CreateRoom("MAINROOM");
-    //    }
-    //    else
-    //    {
-    //        PhotonNetwork.JoinRandomRoom();
-    //    }
-    //}
-
-    public override void OnJoinedRoom()
-    {
-        Debug.Log("Joined Room");
-        PhotonNetwork.NickName = "Player " + PhotonNetwork.CurrentRoom.PlayerCount;
-        photonView.RPC("OnRoomUpdate", RpcTarget.All);
-    }
-
-    public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
-    {
-        OnRoomUpdate();
-    }
-
     #endregion
 
     #region SYNC
-
-    [PunRPC]
-    public void OnRoomUpdate()
-    {
-        roomText.text = "<b>" + PhotonNetwork.NickName + "</b> in room <b>" + PhotonNetwork.CurrentRoom.Name + "</b>\n";
-
-        foreach(var player in PhotonNetwork.CurrentRoom.Players.Values)
-        {
-            roomText.text += " - " + player.NickName + "\n";
-        }
-    }
 
     [PunRPC]
     public void CardPlayed(Photon.Realtime.Player player, Card playedCard)
@@ -118,9 +80,81 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         if(GameManager.Instance.Players.Count == PhotonNetwork.CurrentRoom.PlayerCount)
         {
             Debug.Log("All players connected. Starting the game.");
+
+            Card[] decks = new Card[GameManager.Instance.Players.Count * GameManager.Instance.StartingHandSize];
+            List<Photon.Realtime.Player> players = new List<Photon.Realtime.Player>();
+            int index = 0;
+            foreach(var playerinstance in GameManager.Instance.Players)
+            {
+                players.Add(playerinstance.player);
+                foreach(Card hand in playerinstance.hand)
+                {
+                    decks[index++] = hand;
+                }
+            }
+
+            photonView.RPC("PlayersConnectedStartGame", RpcTarget.All, GameManager.Instance.Deck.ToArray(), players.ToArray(), decks);
         }
     }
 
+    [PunRPC]
+    public void PlayersConnectedStartGame(Card[] Deck, Photon.Realtime.Player[] players, Card[] cards)
+    {
+        /* If we aren't the host, initialize our decks, players, etc */
+        GameManager.Instance.Deck = new List<Card>();
+        GameManager.Instance.Deck.AddRange(Deck);
 
+        for(int i = 0; i < players.Length; i++)
+        {
+            List<Card> handCopy = new List<Card>();
+            for (int j = GameManager.Instance.StartingHandSize * i; j < GameManager.Instance.StartingHandSize * i + GameManager.Instance.StartingHandSize; j++)
+            {
+                handCopy.Add(cards[j]);
+            }
+            
+            GameManager.Instance.Players.Add(new simulation.Player() { hand = handCopy, player = players[i] });
+            if (players[i] == PhotonNetwork.LocalPlayer) GameManager.Instance.me = GameManager.Instance.Players[GameManager.Instance.Players.Count - 1];
+        }
+
+
+        GameManager.Instance.StartGame();
+    }
+
+
+    #endregion
+
+    #region UTILITIES
+
+    /// <summary>
+    /// Generate a photon room for a new game. Will trigger a network
+    /// callback when generated.
+    /// </summary>
+    /// <param name="roomName">The name of the room to create.</param>
+    public void CreateRoom(string roomName)
+    {
+        RoomOptions options = new RoomOptions();
+
+        PhotonNetwork.CreateRoom(roomName, options);
+    }
+
+    /// <summary>
+    /// Join a room by name. Will trigger a network
+    /// callback when joined.
+    /// </summary>
+    /// <param name="roomName">The roomname to join.</param>
+    public void JoinRoom(string roomName)
+    {
+        PhotonNetwork.JoinRoom(roomName);
+    }
+
+    /// <summary>
+    /// Change the scene - RPC to change the scene on all people in the room.
+    /// </summary>
+    /// <param name="sceneName">The new scene to open.</param>
+    [PunRPC]
+    public void ChangeScene(string sceneName)
+    {
+        PhotonNetwork.LoadLevel(sceneName);
+    }
     #endregion
 }

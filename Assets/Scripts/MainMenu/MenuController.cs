@@ -32,15 +32,15 @@ public class MenuController : MonoBehaviourPunCallbacks, ILobbyCallbacks
     [Header("Lobby")]
     public TextMeshProUGUI LobbyName;
     public TextMeshProUGUI NumPlayers;
-    public TextMeshProUGUI BlueList;
-    public TextMeshProUGUI RedList;
-    public TextMeshProUGUI ObserverList;
+    public TextMeshProUGUI PlayerList;
     public Button ReadyButton;
     public Button StartGame;
 
     private List<RoomInfo> currRoomList = new List<RoomInfo>();
     List<GameObject> currRoomObjects = new List<GameObject>();
     private RoomInfo selectedRoom = null;
+
+    private Dictionary<Player, bool> Ready = new Dictionary<Player, bool>();
 
 
     #region UTILITIES
@@ -115,21 +115,34 @@ public class MenuController : MonoBehaviourPunCallbacks, ILobbyCallbacks
 
     public void OnReadyButton()
     {
-
+        photonView.RPC("ReadyToggle", RpcTarget.All, PhotonNetwork.LocalPlayer);
     }
 
     public void OnStartGameButton()
     {
+        //if all players aren't ready, do nothing
+        foreach(var status in Ready)
+        {
+            if (status.Key != PhotonNetwork.LocalPlayer && status.Value == false) return;
+        }
+
         //hide the room
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
 
         //load the game scene
-        NetworkManager.Instance.photonView.RPC("ChangeScene", RpcTarget.All, "Main Game");
+        NetworkManager.Instance.photonView.RPC("ChangeScene", RpcTarget.All, "MainGame");
     }
     #endregion
 
     #region UI
+
+    [PunRPC]
+    public void ReadyToggle(Player player)
+    {
+        Ready[player] = !Ready[player];
+        UpdateLobby();
+    }
 
     [PunRPC]
     public void UpdateLobby()
@@ -141,18 +154,24 @@ public class MenuController : MonoBehaviourPunCallbacks, ILobbyCallbacks
         LobbyName.text = PhotonNetwork.CurrentRoom.Name;
         NumPlayers.text = PhotonNetwork.CurrentRoom.PlayerCount + " Players";
 
-        BlueList.text = "";
-        RedList.text = "";
-        ObserverList.text = "";
+        //show all players, host first
+        PlayerList.text = "";
         foreach(var player in PhotonNetwork.CurrentRoom.Players.Values)
         {
+            /* If this is the new player, add them to the dictionary */
+            if (!Ready.ContainsKey(player))
+            {
+                Ready.Add(player, false);
+            }
+
+            /* Add the player to the list */
             if (player.IsMasterClient)
             {
-                BlueList.text += "- " + player.NickName + "\n";
+                PlayerList.text += "HOST: " + player.NickName + "\n";
             }
             else
             {
-                RedList.text += "- " + player.NickName + "\n";
+                PlayerList.text += "[" + (Ready[player] ? "Y" : "N") + "] " + player.NickName + "\n";
             }
         }
 
