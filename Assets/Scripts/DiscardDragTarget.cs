@@ -19,6 +19,9 @@ public class DiscardDragTarget : DragTarget
         if (cg == null) return false;
 
         image.texture = CardGraphics.Instance.Graphics[cg.card];
+        NetworkManager.Instance.photonView.RPC("CardPlayed", Photon.Pun.RpcTarget.Others, GameManager.Instance.me.player, cg.card);
+        GameManager.Instance.me.hand.Remove(cg.card);
+        GameManager.Instance.DisplayDeck();
 
         return true;
     }

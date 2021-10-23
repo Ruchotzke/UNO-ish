@@ -6,6 +6,7 @@ using Photon.Pun;
 using TMPro;
 using ExitGames.Client.Photon;
 using simulation;
+using UnityEngine.UI;
 
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
@@ -53,6 +54,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         /* Next add the card to the played pile */
         GameManager.Instance.Discard.Add(playedCard);
+
+        /* Finally, update the texture of the discard pile */
+        GameObject.FindObjectOfType<DiscardDragTarget>().GetComponent<RawImage>().texture = CardGraphics.Instance.Graphics[playedCard];
     }
 
     [PunRPC]
